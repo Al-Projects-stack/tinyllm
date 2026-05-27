@@ -10,7 +10,7 @@ Architecture:
   • Optional KV-cache for fast autoregressive inference
   • Weight-tied token embedding ↔ LM head
 
-Parameter count with defaults (vocab=32k, d=256, L=3, H=4): ~10.6 M
+Parameter count with defaults (vocab=32k, d=256, L=3, H=4): ~11.4 M
 """
 
 from __future__ import annotations

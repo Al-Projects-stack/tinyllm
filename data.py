@@ -95,16 +95,94 @@ def clean_text(text: str) -> str:
 # Step 3 — Tokenise & save binary
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Character-level fallback tokenizer
+# ---------------------------------------------------------------------------
+
+class CharTokenizer:
+    """
+    Minimal character-level tokenizer used as a fallback when no BPE
+    tokenizer.json is present.
+
+    Vocabulary: all printable ASCII characters (0x20–0x7E) plus newline,
+    plus four special tokens: [UNK], [PAD], [BOS], [EOS].
+    The vocab is fixed and reproducible (no training required).
+    """
+
+    # Special tokens — assigned to indices 0-3
+    _SPECIALS = ["[UNK]", "[PAD]", "[BOS]", "[EOS]"]
+
+    def __init__(self) -> None:
+        # Printable ASCII: space (32) through tilde (126) + newline
+        chars = [chr(i) for i in range(32, 127)] + ["\n"]
+        self._vocab: dict[str, int] = {}
+        for i, tok in enumerate(self._SPECIALS):
+            self._vocab[tok] = i
+        for ch in chars:
+            if ch not in self._vocab:
+                self._vocab[ch] = len(self._vocab)
+        self._id2tok = {v: k for k, v in self._vocab.items()}
+
+    # HuggingFace-compatible duck-type API --------------------------------
+
+    def get_vocab(self) -> dict[str, int]:
+        return dict(self._vocab)
+
+    def get_vocab_size(self) -> int:
+        return len(self._vocab)
+
+    def encode(self, text: str) -> "_CharEncoding":
+        unk = self._vocab["[UNK]"]
+        ids = [self._vocab.get(ch, unk) for ch in text]
+        return _CharEncoding(ids)
+
+    def decode(self, ids, skip_special_tokens: bool = True) -> str:
+        specials = set(self._SPECIALS) if skip_special_tokens else set()
+        chars = []
+        for i in ids:
+            tok = self._id2tok.get(i, "")
+            if tok not in specials:
+                chars.append(tok)
+        return "".join(chars)
+
+    # Disable padding / truncation (match tokenizers API stubs) ----------
+
+    def no_padding(self) -> None:
+        pass  # no-op — no padding in char tokenizer
+
+    def no_truncation(self) -> None:
+        pass  # no-op — no truncation in char tokenizer
+
+    def enable_padding(self, **kwargs) -> None:
+        pass  # no-op
+
+
+class _CharEncoding:
+    """Minimal stand-in for tokenizers.Encoding."""
+
+    def __init__(self, ids: list[int]) -> None:
+        self.ids = ids
+
+
 def load_tokenizer(tokenizer_path: str):
-    """Load a pre-trained BPE tokenizer saved by train_tokenizer.py."""
-    from tokenizers import Tokenizer  # type: ignore
+    """
+    Load a pre-trained BPE tokenizer saved by train_tokenizer.py.
+
+    Falls back automatically to the built-in CharTokenizer when
+    tokenizer.json is not present, allowing the full pipeline to run
+    on raw text without first training a BPE model.
+    """
     tok_file = Path(tokenizer_path) / "tokenizer.json"
-    if not tok_file.exists():
-        raise FileNotFoundError(
-            f"Tokenizer not found at {tok_file}. "
-            "Run `python train_tokenizer.py` first."
+    if tok_file.exists():
+        from tokenizers import Tokenizer  # type: ignore
+        return Tokenizer.from_file(str(tok_file))
+    else:
+        print(
+            f"[data] WARNING: BPE tokenizer not found at {tok_file}. "
+            "Falling back to built-in character-level tokenizer. "
+            "Run `python train_tokenizer.py` for better quality."
         )
-    return Tokenizer.from_file(str(tok_file))
+        return CharTokenizer()
 
 
 def encode_file(

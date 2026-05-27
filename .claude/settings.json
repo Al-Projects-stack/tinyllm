@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python -c 'import ast; ast.parse\\(open\\('\\\\''__TRACKED_VAR__'\\\\''\\).read\\(\\)\\); print\\('\\\\''OK: __TRACKED_VAR__'\\\\''\\)')",
+      "Bash(grep -n \"TODO\\\\|FIXME\\\\|\\\\.\\\\.\\\\.\\\\|pass$\\\\|NotImplemented\" config.py model.py data.py train_tokenizer.py train.py inference.py)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('data.py'\\).read\\(\\)\\); print\\('data.py: OK'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('train.py'\\).read\\(\\)\\); print\\('train.py: OK'\\)\")",
+      "Bash(python train.py --smoke-test --steps 100)"
+    ]
+  }
+}

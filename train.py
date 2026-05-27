@@ -248,7 +248,8 @@ def train(config: Config, smoke_test: bool = False, resume: str | None = None) -
             torch.optim.AdamW([torch.zeros(1)], fused=True)
             adamw_kwargs["fused"] = True
         except (TypeError, RuntimeError):
-            pass
+            # fused AdamW not supported on this build — fall back to standard
+            print("[train] fused AdamW not available; using standard AdamW")
 
     optimizer = torch.optim.AdamW(
         [

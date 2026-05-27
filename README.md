@@ -165,7 +165,7 @@ Val loss ~2.0–2.3 is a realistic target for this model size on TinyStories.
 ## Model architecture
 
 ```
-GPT (10.6 M params)
+GPT (11.4 M params)
 ├── TokenEmbedding    32000 × 256
 ├── PositionEmbedding  128  × 256
 ├── TransformerBlock × 3
@@ -232,6 +232,9 @@ GPT (10.6 M params)
 
 ### "Tokenizer not found" error
 - Run `python train_tokenizer.py` before `python train.py`
+- Alternatively, `data.py` automatically falls back to the built-in
+  **character-level tokenizer** (vocab ≈ 100 chars) if no BPE file is found.
+  Quality is lower but the pipeline runs without any prior tokenizer training.
 
 ### "Token file not found" error
 - Run `python data.py` after training the tokenizer
