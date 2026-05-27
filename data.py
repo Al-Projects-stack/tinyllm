@@ -242,8 +242,8 @@ def encode_file(
     arr[:n_train].tofile(out_train)
     arr[n_train:].tofile(out_val)
 
-    print(f"[data] Saved {n_train:,} train tokens → {out_train}")
-    print(f"[data] Saved {n_val:,} val tokens   → {out_val}")
+    print(f"[data] Saved {n_train:,} train tokens -> {out_train}")
+    print(f"[data] Saved {n_val:,} val tokens   -> {out_val}")
     return n_train, n_val
 
 

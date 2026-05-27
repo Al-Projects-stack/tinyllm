@@ -119,7 +119,7 @@ def train_bpe_tokenizer(
     # Save
     # ------------------------------------------------------------------
     tokenizer.save(str(tok_json))
-    print(f"[tokenizer] Saved tokenizer ({tokenizer.get_vocab_size()} tokens) → {tok_json}")
+    print(f"[tokenizer] Saved tokenizer ({tokenizer.get_vocab_size()} tokens) -> {tok_json}")
 
     # Also save a human-readable vocab list for inspection
     vocab = tokenizer.get_vocab()
@@ -127,7 +127,7 @@ def train_bpe_tokenizer(
     with open(vocab_txt, "w", encoding="utf-8") as fh:
         for token, idx in sorted(vocab.items(), key=lambda x: x[1]):
             fh.write(f"{idx}\t{token}\n")
-    print(f"[tokenizer] Saved vocab list → {vocab_txt}")
+    print(f"[tokenizer] Saved vocab list -> {vocab_txt}")
 
 
 def _train(tokenizer, trainer, files: list[str]) -> None:

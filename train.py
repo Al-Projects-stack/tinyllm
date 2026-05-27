@@ -55,7 +55,7 @@ def set_seed(seed: int) -> None:
 
 
 # ---------------------------------------------------------------------------
-# LR schedule: linear warmup → cosine decay → min_lr
+# LR schedule: linear warmup -> cosine decay -> min_lr
 # ---------------------------------------------------------------------------
 
 def get_lr(step: int, config: Config) -> float:
@@ -404,7 +404,7 @@ def train(config: Config, smoke_test: bool = False, resume: str | None = None) -
         if last_train_loss >= first_train_loss:
             print(
                 f"[smoke] WARNING: loss did not decrease "
-                f"({first_train_loss:.4f} → {last_train_loss:.4f}). "
+                f"({first_train_loss:.4f} -> {last_train_loss:.4f}). "
                 "Model may need more steps to overfit."
             )
             # Not a hard failure — could happen with very few steps
