@@ -275,7 +275,7 @@ def run_interactive(
         return tokenizer.decode(ids, skip_special_tokens=False)
 
     print("\n" + "=" * 60)
-    print("  Tiny LLM — Interactive Generation")
+    print("  Tiny LLM -- Interactive Generation")
     print("  Type a prompt and press Enter.  Ctrl+C or 'quit' to exit.")
     print("=" * 60 + "\n")
 
@@ -290,7 +290,7 @@ def run_interactive(
             print("[inference] Bye!")
             break
         if not prompt:
-            print("[inference] (empty prompt — skipping)\n")
+            print("[inference] (empty prompt -- skipping)\n")
             continue
 
         # Encode prompt

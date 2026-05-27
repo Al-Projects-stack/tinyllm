@@ -6,7 +6,16 @@
       "Bash(grep -n \"TODO\\\\|FIXME\\\\|\\\\.\\\\.\\\\.\\\\|pass$\\\\|NotImplemented\" config.py model.py data.py train_tokenizer.py train.py inference.py)",
       "Bash(python -c \"import ast; ast.parse\\(open\\('data.py'\\).read\\(\\)\\); print\\('data.py: OK'\\)\")",
       "Bash(python -c \"import ast; ast.parse\\(open\\('train.py'\\).read\\(\\)\\); print\\('train.py: OK'\\)\")",
-      "Bash(python train.py --smoke-test --steps 100)"
+      "Bash(python train.py --smoke-test --steps 100)",
+      "Bash(python data.py)",
+      "PowerShell(cd \"c:\\\\Users\\\\Alsax\\\\Downloads\\\\Cvs\\\\tinyllm\"; if \\(Test-Path \"data\\\\raw\\\\tinystories.txt\"\\) { $f = Get-Item \"data\\\\raw\\\\tinystories.txt\"; \"$\\($f.Name\\) — $\\([math]::Round\\($f.Length/1MB,1\\)\\) MB\" } else { \"not yet\" })",
+      "PowerShell(cd \"c:\\\\Users\\\\Alsax\\\\Downloads\\\\Cvs\\\\tinyllm\"; $f = Get-Item \"data\\\\raw\\\\tinystories.txt\"; \"$\\($f.Name\\) — $\\([math]::Round\\($f.Length/1MB,1\\)\\) MB\")",
+      "PowerShell(cd \"c:\\\\Users\\\\Alsax\\\\Downloads\\\\Cvs\\\\tinyllm\"; \\(Get-Content \"C:\\\\Users\\\\Alsax\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Alsax-Downloads-Cvs-tinyllm\\\\cc25b517-dc8f-46f6-8780-f1e9ff49d897\\\\tasks\\\\b5ru4qu4u.output\" -Raw\\).Split\\(\"`n\"\\) | Select-Object -Last 10)",
+      "PowerShell(cd \"c:\\\\Users\\\\Alsax\\\\Downloads\\\\Cvs\\\\tinyllm\"; Start-Sleep -Seconds 5; $f = Get-Item \"data\\\\raw\\\\tinystories.txt\" -ErrorAction SilentlyContinue; if \\($f\\) { \"$\\([math]::Round\\($f.Length/1MB,1\\)\\) MB written\" } else { \"file not found\" })",
+      "PowerShell(cd \"c:\\\\Users\\\\Alsax\\\\Downloads\\\\Cvs\\\\tinyllm\"; Get-ChildItem data -Recurse -ErrorAction SilentlyContinue | Select-Object FullName, @{N='MB';E={[math]::Round\\($_.Length/1MB,1\\)}})",
+      "PowerShell(Stop-Process -Id 35388 -Force)",
+      "Bash(python train_tokenizer.py --input data/raw/tinystories.txt --tokenizer-dir data/tokenizer --vocab-size 32000)",
+      "PowerShell(cd \"c:\\\\Users\\\\Alsax\\\\Downloads\\\\Cvs\\\\tinyllm\"; Get-ChildItem data\\\\tokenizer -ErrorAction SilentlyContinue | Select-Object Name, @{N='KB';E={[math]::Round\\($_.Length/1KB,0\\)}})"
     ]
   }
 }

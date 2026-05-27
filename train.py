@@ -181,8 +181,17 @@ def train(config: Config, smoke_test: bool = False, resume: str | None = None) -
 
     dtype_str = config.training.dtype
     if device.type == "cpu" and dtype_str in ("bfloat16", "float16"):
-        print(f"[train] CPU detected — overriding dtype from {dtype_str} to float32")
+        print(f"[train] CPU detected -- overriding dtype from {dtype_str} to float32")
         dtype_str = "float32"
+    elif device.type == "cuda" and dtype_str == "bfloat16":
+        # bfloat16 requires CUDA compute capability >= 8.0 (Ampere+).
+        # Older GPUs (Turing/Volta/Pascal, e.g. GTX 1650) only support float16.
+        major = torch.cuda.get_device_capability(device)[0]
+        if major < 8:
+            name = torch.cuda.get_device_name(device)
+            print(f"[train] {name} (sm_{major}x) does not support bfloat16 -- "
+                  f"overriding dtype to float16")
+            dtype_str = "float16"
 
     dtype_map = {"bfloat16": torch.bfloat16, "float16": torch.float16, "float32": torch.float32}
     pt_dtype = dtype_map[dtype_str]
@@ -205,7 +214,7 @@ def train(config: Config, smoke_test: bool = False, resume: str | None = None) -
     # Data
     # ------------------------------------------------------------------
     if smoke_test:
-        print("[train] Smoke-test mode — using synthetic in-memory data")
+        print("[train] Smoke-test mode -- using synthetic in-memory data")
         train_loader, val_loader = create_smoke_dataloaders(config)
     else:
         print("[train] Loading dataset from disk ...")
@@ -248,7 +257,7 @@ def train(config: Config, smoke_test: bool = False, resume: str | None = None) -
             torch.optim.AdamW([torch.zeros(1)], fused=True)
             adamw_kwargs["fused"] = True
         except (TypeError, RuntimeError):
-            # fused AdamW not supported on this build — fall back to standard
+            # fused AdamW not supported on this build -- fall back to standard
             print("[train] fused AdamW not available; using standard AdamW")
 
     optimizer = torch.optim.AdamW(
@@ -407,7 +416,7 @@ def train(config: Config, smoke_test: bool = False, resume: str | None = None) -
                 f"({first_train_loss:.4f} -> {last_train_loss:.4f}). "
                 "Model may need more steps to overfit."
             )
-            # Not a hard failure — could happen with very few steps
+            # Not a hard failure -- could happen with very few steps
         else:
             print(
                 f"[smoke] PASS -- loss decreased: "
