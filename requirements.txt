@@ -1,3 +1,6 @@
+# GPU (CUDA 12.8) — installed via setup_gpu.bat
+# torch==2.11.0+cu128  (use: pip install torch --index-url https://download.pytorch.org/whl/cu128)
+# CPU fallback (smoke tests, no GPU)
 torch==2.12.0
 tokenizers==0.22.2
 datasets==4.8.5
