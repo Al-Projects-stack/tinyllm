@@ -1,8 +1,9 @@
 # Tiny LLM — GPT from scratch in pure PyTorch
 
 A complete, ~11M-parameter decoder-only transformer trained from scratch on the
-[TinyStories](https://huggingface.co/datasets/roneneldan/TinyStories) dataset.
+TinyStories (https://huggingface.co/datasets/roneneldan/TinyStories) dataset.
 No Hugging Face Trainer, no Lightning, no Accelerate — every line is plain PyTorch.
+
 
 **Status:** Training complete for tinyllm (smoke-tested; model training loop validated).
 
