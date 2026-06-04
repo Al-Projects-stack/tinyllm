@@ -15,7 +15,8 @@ This project walks through every layer of a modern LLM, from raw text to generat
 stories. Here is what each piece teaches you:
 
 ### 1. Tokenization (`train_tokenizer.py`)
-You are learning how raw text becomes numbers.  
+I’m learning to convert raw text to numbers.  
+
 A **Byte-Pair Encoding (BPE)** tokenizer is trained directly on TinyStories. It
 starts with individual characters and repeatedly merges the most frequent adjacent
 pair until it has a 32,000-token vocabulary. The result: common words ("the", "once")
@@ -23,7 +24,9 @@ become single tokens; rare words are split into subwords. This is exactly how GP
 LLaMA, and Mistral handle text.
 
 ### 2. Data pipeline (`data.py`)
-You are learning how to feed a GPU efficiently.  
+I’m learning to feed the GPU efficiently.  
+
+
 The 1.84 GB text file is encoded once into a flat array of token IDs and saved as a
 binary file (`train.bin`). During training, a memory-mapped `numpy` array lets
 PyTorch read random windows without loading everything into RAM. Each sample is a
@@ -31,9 +34,10 @@ PyTorch read random windows without loading everything into RAM. Each sample is 
 — the model must predict the next token at every position simultaneously.
 
 ### 3. Model architecture (`model.py`)
-You are learning the transformer block used by every modern LLM.
+Transformer block used by every modern LLM.
 
 ```
+
 Input tokens (B, T)
       |
 Token Embedding (32000 x 256)  +  Positional Embedding (128 x 256)
@@ -54,7 +58,9 @@ Final RMSNorm
 LM Head  256 -> 32000  (weight-tied to token embedding — saves 8M params)
 ```
 
-Key ideas you are internalising:
+This is what I’m working on:
+
+
 - **Causal masking** — each position can only attend to itself and the past, making
   generation possible one token at a time.
 - **Weight tying** — the embedding matrix and the output projection share the same
@@ -67,9 +73,11 @@ Key ideas you are internalising:
   each new token only requires one forward pass through the new position.
 
 ### 4. Training loop (`train.py`)
-You are learning the engineering that makes training stable and fast.
+I’m learning engineering for stable, fast training.
+
 
 - **AdamW with decoupled weight decay** — weight decay is not applied to embeddings,
+
   norms, or biases (those don't benefit from it).
 - **Cosine LR schedule with linear warmup** — the learning rate ramps up for 100
   steps to avoid large early updates, then follows a cosine curve down to 10% of
@@ -83,7 +91,8 @@ You are learning the engineering that makes training stable and fast.
   optimiser step, simulating a larger effective batch size without extra VRAM.
 
 ### 5. Inference (`inference.py`)
-You are learning how a trained model generates text.
+This is what I’m doing: generating text with a trained model.
+
 
 - **Autoregressive decoding** — the model predicts one token at a time, appends it
   to the context, and feeds the extended sequence back in.
