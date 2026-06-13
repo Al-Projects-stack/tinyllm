@@ -5,7 +5,7 @@ TinyStories (https://huggingface.co/datasets/roneneldan/TinyStories) dataset.
 No Hugging Face Trainer, no Lightning, no Accelerate — every line is plain PyTorch.
 
 
-**Status:** Training ran up to step 4,500 / 10,000. All training loop features validated. Ready to resume with `--resume checkpoints/step_004500.pt`.
+**Status:** Training incomplete — stopped at step 4,500 / 10,000.
 
 ---
 
