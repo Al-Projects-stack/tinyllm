@@ -69,7 +69,9 @@ class CausalSelfAttention(nn.Module):
         self.qkv_proj = nn.Linear(config.hidden_dim, 3 * config.hidden_dim, bias=False)
         self.out_proj = nn.Linear(config.hidden_dim, config.hidden_dim, bias=False)
 
-        # Scaled-down output projection (GPT-2 style residual init)
+        # Scaled-down output projection (GPT-2 style residual init).
+        # Tag first so _init_weights (called via apply() in GPT.__init__) skips re-init.
+        self.out_proj._is_residual_proj = True
         nn.init.normal_(self.out_proj.weight, std=0.02 / math.sqrt(2 * config.num_layers))
 
     def forward(
@@ -98,16 +100,38 @@ class CausalSelfAttention(nn.Module):
 
         present_kv: Optional[tuple[torch.Tensor, torch.Tensor]] = (k, v) if use_cache else None
 
-        # F.scaled_dot_product_attention handles causal masking and FlashAttention
-        # is_causal=True generates an upper-triangular mask (causal) and handles
-        # the case T_q != T_kv correctly (new token vs. cached context).
+        # F.scaled_dot_product_attention handles causal masking and FlashAttention.
+        # is_causal=True is only valid when there is no KV-cache prefix (T_k == T_q).
+        # When past_kv is present and T_q > 1 (multi-token prefill into a warm cache)
+        # we must build an explicit mask: each new query position i can attend to all
+        # past_len cached keys plus the first (i+1) new keys.
         dropout_p = self.dropout_p if self.training else 0.0
-        out = F.scaled_dot_product_attention(
-            q, k, v,
-            attn_mask=None,
-            dropout_p=dropout_p,
-            is_causal=True,
-        )                                                                # (B, H, T, D)
+        T_q = q.shape[2]
+        T_k = k.shape[2]  # past_len + T_q when cache is present
+        if past_kv is not None and T_q > 1:
+            # Build a (T_q, T_k) causal mask: query i attends to keys 0 .. past_len+i
+            past_len = T_k - T_q
+            mask = torch.ones(T_q, T_k, dtype=torch.bool, device=q.device).tril(
+                diagonal=past_len
+            )
+            attn_mask = torch.zeros(T_q, T_k, dtype=q.dtype, device=q.device).masked_fill(
+                ~mask, float("-inf")
+            )
+            out = F.scaled_dot_product_attention(
+                q, k, v,
+                attn_mask=attn_mask,
+                dropout_p=dropout_p,
+                is_causal=False,
+            )
+        else:
+            # No cache, or single new token (T_q == 1): standard causal path.
+            out = F.scaled_dot_product_attention(
+                q, k, v,
+                attn_mask=None,
+                dropout_p=dropout_p,
+                is_causal=True,
+            )
+        #                                                                (B, H, T, D)
 
         # Merge heads and project
         out = out.transpose(1, 2).contiguous().view(B, T, C)           # (B, T, C)
@@ -130,7 +154,9 @@ class SwiGLU(nn.Module):
         self.down_proj = nn.Linear(inner_dim, config.hidden_dim, bias=False)
         self.dropout   = nn.Dropout(config.dropout)
 
-        # GPT-2 style residual scaling for down projection
+        # GPT-2 style residual scaling for down projection.
+        # Tag first so _init_weights (called via apply() in GPT.__init__) skips re-init.
+        self.down_proj._is_residual_proj = True
         nn.init.normal_(self.down_proj.weight, std=0.02 / math.sqrt(2 * config.num_layers))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

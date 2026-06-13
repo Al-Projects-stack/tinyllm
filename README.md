@@ -119,9 +119,13 @@ tinyllm/
 ├── train_tokenizer.py   # Train & save 32k BPE tokenizer on raw text
 ├── train.py             # Training loop (mixed precision, cosine LR, grad clip, checkpoints)
 ├── inference.py         # Autoregressive generation, sampling utils, interactive CLI
+├── inference_utils.py   # Shared sampling + tokenizer helpers (used by inference.py + UI)
 ├── setup_gpu.bat        # One-click CUDA PyTorch installer for Windows
 ├── requirements.txt     # Pinned dependencies
 ├── Dockerfile           # Reproducible GPU environment (CUDA 12.1)
+├── ui/                  # Web UI (Flask backend + HTML/JS frontend)
+│   ├── server.py
+│   └── index.html
 └── data/                # Created at runtime (not in git)
     ├── raw/tinystories.txt      # 1.84 GB raw text
     ├── tokenizer/tokenizer.json # 32k BPE vocab
@@ -143,11 +147,13 @@ tinyllm/
 ```bat
 setup_gpu.bat
 pip install -r requirements.txt
+pip install flask          # required for the web UI
 ```
 
 **CPU only:**
 ```bash
 pip install -r requirements.txt
+pip install flask          # required for the web UI
 ```
 
 ---
@@ -198,6 +204,28 @@ python inference.py --checkpoint checkpoints/step_010000.pt \
 python inference.py --checkpoint checkpoints/step_010000.pt \
     --prompt "Once upon a time" --temperature 0
 ```
+
+---
+
+## Web UI
+
+A browser-based interface is available for interactive generation.
+
+### Start the server
+
+```bash
+python ui/server.py
+```
+
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
+
+### Features
+- Prompt input with **Ctrl+Enter** (or Cmd+Enter) shortcut
+- Adjustable temperature, top-k, top-p, repetition penalty, max tokens
+- **Checkpoint dropdown** — populated automatically from the `checkpoints/` directory
+- **Copy output** button
+- **Token count** displayed after each generation
+- **Stop** button to cancel an in-flight generation
 
 ---
 

@@ -27,6 +27,7 @@ def train_bpe_tokenizer(
     min_frequency: int = 2,
     max_chars: int | None = None,
     special_tokens: list[str] | None = None,
+    force: bool = False,
 ) -> None:
     """
     Train a BPE tokenizer on the given text file and save it.
@@ -59,8 +60,10 @@ def train_bpe_tokenizer(
 
     tok_json = save_path / "tokenizer.json"
     if tok_json.exists():
-        print(f"[tokenizer] Tokenizer already exists at {tok_json}. Delete to retrain.")
-        return
+        if not force:
+            print(f"[tokenizer] Tokenizer already exists at {tok_json}. Use --force to retrain.")
+            return
+        print(f"[tokenizer] --force set: overwriting existing tokenizer at {tok_json}.")
 
     # ------------------------------------------------------------------
     # Build tokenizer
@@ -185,6 +188,10 @@ def parse_args() -> argparse.Namespace:
         "--max-chars", type=int, default=None,
         help="Only use the first N characters for training (quick test).",
     )
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Overwrite an existing tokenizer.json instead of skipping.",
+    )
     return parser.parse_args()
 
 
@@ -196,4 +203,5 @@ if __name__ == "__main__":
         vocab_size=args.vocab_size,
         min_frequency=args.min_frequency,
         max_chars=args.max_chars,
+        force=args.force,
     )

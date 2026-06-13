@@ -37,7 +37,7 @@
       padding: 12px;
       outline:none;
     }
-    input[type="number"], input[type="text"] {
+    input[type="number"], input[type="text"], select {
       width: 100%;
       background: rgba(0,0,0,.18);
       border: 1px solid var(--border);
@@ -45,6 +45,10 @@
       border-radius: 10px;
       padding: 10px 12px;
       outline:none;
+    }
+    select {
+      cursor:pointer;
+      appearance:auto;
     }
     .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .actions { display:flex; gap: 12px; flex-wrap:wrap; margin-top: 12px; }
@@ -146,12 +150,18 @@
           </div>
           <div>
             <label>Checkpoint</label>
-            <input type="text" id="checkpoint" value="checkpoints/step_004500.pt" />
+            <select id="checkpoint"></select>
           </div>
         </div>
 
-        <label style="margin-top:12px;">Output</label>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+          <label style="margin:0;">Output</label>
+          <button id="btnCopy" style="font-size:12px;padding:4px 10px;">Copy</button>
+        </div>
         <div class="out mono" id="output">(output will appear here)</div>
+        <div class="small" style="margin-top:6px;">
+          <span id="tokenCount"></span>
+        </div>
         <div class="small" style="margin-top:10px;">
           Server base URL:
           <span class="pill mono" id="baseUrlPill">http://localhost:8000</span>
@@ -166,28 +176,79 @@
 
     const outEl = document.getElementById('output');
     const statusEl = document.getElementById('status');
+    const tokenCountEl = document.getElementById('tokenCount');
 
     function setStatus(msg) {
       statusEl.textContent = msg;
     }
 
-    function escapeHtml(s) {
-      return s.replace(/[&<>\"]/g, (c) => ({'&':'&amp;','<':'<','>':'>','"':'"'}[c]));
+    // ---------- Checkpoint dropdown ----------
+
+    const ckptSelect = document.getElementById('checkpoint');
+
+    async function populateCheckpoints() {
+      ckptSelect.innerHTML = '<option value="">Loading...</option>';
+      try {
+        const res = await fetch(baseUrl + '/checkpoints');
+        const names = await res.json();
+        ckptSelect.innerHTML = '';
+        if (names.length === 0) {
+          ckptSelect.innerHTML = '<option value="">No checkpoints found</option>';
+          return;
+        }
+        for (const name of names) {
+          const opt = document.createElement('option');
+          opt.value = 'checkpoints/' + name;
+          opt.textContent = name;
+          ckptSelect.appendChild(opt);
+        }
+      } catch {
+        ckptSelect.innerHTML = '<option value="">Could not load checkpoints</option>';
+      }
     }
 
+    populateCheckpoints();
+
+    // ---------- Clear ----------
+
     document.getElementById('btnClear').addEventListener('click', () => {
-      outEl.textContent = '';
+      outEl.textContent = '(output will appear here)';
       setStatus('');
+      tokenCountEl.textContent = '';
     });
 
-    document.getElementById('btnGenerate').addEventListener('click', async () => {
+    // ---------- Copy ----------
+
+    document.getElementById('btnCopy').addEventListener('click', async () => {
+      const text = outEl.textContent;
+      if (!text || text === '(output will appear here)') return;
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus('Copied to clipboard.');
+      } catch {
+        setStatus('Failed to copy.');
+      }
+    });
+
+    // ---------- Generate / Abort ----------
+
+    const btnGenerate = document.getElementById('btnGenerate');
+    let abortController = null;
+
+    async function runGenerate() {
+      // If a request is in flight, abort it and stop
+      if (abortController) {
+        abortController.abort();
+        return;
+      }
+
       const prompt = document.getElementById('prompt').value;
       const max_new_tokens = Number(document.getElementById('maxNewTokens').value);
       const temperature = Number(document.getElementById('temperature').value);
       const top_k = Number(document.getElementById('topK').value);
       const top_p = Number(document.getElementById('topP').value);
       const repetition_penalty = Number(document.getElementById('repPenalty').value);
-      const checkpoint = document.getElementById('checkpoint').value.trim();
+      const checkpoint = ckptSelect.value;
 
       if (!prompt.trim()) {
         setStatus('Please enter a prompt.');
@@ -195,7 +256,12 @@
       }
 
       outEl.textContent = '';
+      tokenCountEl.textContent = '';
       setStatus('Generating...');
+      btnGenerate.textContent = 'Stop';
+
+      abortController = new AbortController();
+      const signal = abortController.signal;
 
       try {
         const res = await fetch(baseUrl + '/generate', {
@@ -209,7 +275,8 @@
             top_k,
             top_p,
             repetition_penalty
-          })
+          }),
+          signal
         });
 
         if (!res.ok) {
@@ -218,12 +285,32 @@
         }
 
         const data = await res.json();
-        // Expect: { text: "..." }
         outEl.textContent = prompt + data.text;
         setStatus('Done.');
+        if (data.tokens !== undefined) {
+          tokenCountEl.textContent = `${data.tokens} token(s) generated`;
+        }
       } catch (err) {
-        console.error(err);
-        setStatus('Error: ' + err.message);
+        if (err.name === 'AbortError') {
+          outEl.textContent = '(cancelled)';
+          setStatus('Cancelled.');
+        } else {
+          console.error(err);
+          setStatus('Error: ' + err.message);
+        }
+      } finally {
+        abortController = null;
+        btnGenerate.textContent = 'Generate';
+      }
+    }
+
+    btnGenerate.addEventListener('click', runGenerate);
+
+    // Ctrl+Enter (or Cmd+Enter) inside the prompt textarea triggers generation
+    document.getElementById('prompt').addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        runGenerate();
       }
     });
   </script>

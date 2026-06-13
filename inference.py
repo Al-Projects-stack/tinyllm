@@ -39,95 +39,16 @@ from pathlib import Path
 from typing import Optional
 
 import torch
-import torch.nn.functional as F
 
 from config import Config, GenerationConfig
+from inference_utils import (
+    apply_repetition_penalty,
+    get_bos_token_id,
+    get_eos_token_id,
+    load_tokenizer,
+    top_k_top_p_filter,
+)
 from model import GPT
-
-
-# ---------------------------------------------------------------------------
-# Sampling utilities
-# ---------------------------------------------------------------------------
-
-def top_k_top_p_filter(
-    logits: torch.Tensor,      # (vocab_size,)
-    top_k: int = 0,
-    top_p: float = 1.0,
-) -> torch.Tensor:
-    """
-    Apply top-k and/or top-p (nucleus) filtering to logits.
-    Returns filtered logits (masked with -inf for excluded tokens).
-    """
-    if top_k > 0:
-        # Keep only top-k values; mask the rest
-        top_k = min(top_k, logits.size(-1))
-        values, _ = torch.topk(logits, top_k)
-        threshold = values[..., -1, None]
-        logits = logits.masked_fill(logits < threshold, float("-inf"))
-
-    if 0.0 < top_p < 1.0:
-        sorted_logits, sorted_indices = torch.sort(logits, descending=True)
-        cumulative_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
-
-        # Remove tokens whose cumulative probability exceeds top_p
-        # Shift by 1 to include the token that pushes probability over p
-        remove_mask = cumulative_probs - F.softmax(sorted_logits, dim=-1) > top_p
-        sorted_logits[remove_mask] = float("-inf")
-
-        # Scatter back to original indexing
-        logits = torch.zeros_like(logits).scatter_(0, sorted_indices, sorted_logits)
-
-    return logits
-
-
-def apply_repetition_penalty(
-    logits: torch.Tensor,      # (vocab_size,)
-    input_ids: torch.Tensor,   # (T,) — context so far
-    penalty: float,
-) -> torch.Tensor:
-    """Reduce logit of previously generated tokens (repetition penalty > 1.0)."""
-    if penalty == 1.0:
-        return logits
-    # Gather logits at generated positions and divide / multiply
-    score = torch.gather(logits, 0, input_ids)
-    # Penalise: positive logits are reduced, negative logits are increased
-    score = torch.where(score < 0, score * penalty, score / penalty)
-    logits.scatter_(0, input_ids, score)
-    return logits
-
-
-# ---------------------------------------------------------------------------
-# Tokenizer helpers
-# ---------------------------------------------------------------------------
-
-def load_tokenizer(tokenizer_path: str):
-    """Load a HuggingFace BPE tokenizer from tokenizer.json."""
-    from tokenizers import Tokenizer  # type: ignore
-    tok_file = Path(tokenizer_path) / "tokenizer.json"
-    if not tok_file.exists():
-        raise FileNotFoundError(
-            f"Tokenizer not found at {tok_file}. "
-            "Run `python train_tokenizer.py` first."
-        )
-    return Tokenizer.from_file(str(tok_file))
-
-
-def get_eos_token_id(tokenizer) -> Optional[int]:
-    """Return the EOS token id if present, else None."""
-    vocab = tokenizer.get_vocab()
-    for candidate in ["[EOS]", "</s>", "<|endoftext|>", "<eos>"]:
-        if candidate in vocab:
-            return vocab[candidate]
-    return None
-
-
-def get_bos_token_id(tokenizer) -> Optional[int]:
-    """Return the BOS token id if present, else None."""
-    vocab = tokenizer.get_vocab()
-    for candidate in ["[BOS]", "<s>", "<|startoftext|>", "<bos>"]:
-        if candidate in vocab:
-            return vocab[candidate]
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -344,6 +265,8 @@ def parse_args() -> argparse.Namespace:
                         help="Disable streaming; print full output at once.")
     parser.add_argument("--device", type=str, default=None,
                         help="Device: 'cpu', 'cuda', 'mps'. Auto-detected if omitted.")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Random seed for reproducible generation.")
     return parser.parse_args()
 
 
@@ -360,6 +283,12 @@ if __name__ == "__main__":
     else:
         device = torch.device("cpu")
     print(f"[inference] Using device: {device}")
+
+    if args.seed is not None:
+        torch.manual_seed(args.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(args.seed)
+        print(f"[inference] Random seed set to {args.seed}")
 
     model, tokenizer = load_artifacts(args.checkpoint, args.tokenizer_dir, device)
 
