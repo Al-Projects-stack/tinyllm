@@ -5,7 +5,7 @@ TinyStories (https://huggingface.co/datasets/roneneldan/TinyStories) dataset.
 No Hugging Face Trainer, no Lightning, no Accelerate — every line is plain PyTorch.
 
 
-**Status:** Training complete for tinyllm (smoke-tested; model training loop validated).
+**Status:** Training ran up to step 4,500 / 10,000. All training loop features validated. Ready to resume with `--resume checkpoints/step_004500.pt`.
 
 ---
 
@@ -193,15 +193,15 @@ python train.py --smoke-test --steps 100
 
 ```bash
 # Interactive mode
-python inference.py --checkpoint checkpoints/step_010000.pt
+python inference.py --checkpoint checkpoints/step_004500.pt
 
 # Single prompt
-python inference.py --checkpoint checkpoints/step_010000.pt \
+python inference.py --checkpoint checkpoints/step_004500.pt \
     --prompt "Once upon a time there was a little girl" \
     --max-new-tokens 300 --temperature 0.8 --top-k 50
 
 # Greedy (deterministic)
-python inference.py --checkpoint checkpoints/step_010000.pt \
+python inference.py --checkpoint checkpoints/step_004500.pt \
     --prompt "Once upon a time" --temperature 0
 ```
 

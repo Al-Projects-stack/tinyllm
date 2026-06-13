@@ -253,11 +253,11 @@ def train(config: Config, smoke_test: bool = False, resume: str | None = None) -
     )
     if device.type == "cuda":
         try:
-            # Check if fused is supported
-            torch.optim.AdamW([torch.zeros(1)], fused=True)
-            adamw_kwargs["fused"] = True
+            # fused AdamW is ~10% faster but incompatible with GradScaler on some PyTorch builds
+            if not use_scaler:
+                torch.optim.AdamW([torch.zeros(1)], fused=True)
+                adamw_kwargs["fused"] = True
         except (TypeError, RuntimeError):
-            # fused AdamW not supported on this build -- fall back to standard
             print("[train] fused AdamW not available; using standard AdamW")
 
     optimizer = torch.optim.AdamW(
