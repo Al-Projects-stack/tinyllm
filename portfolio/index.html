@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Al Mujati — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      height: 100vh;
+      background: #0a0a0f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      overflow: hidden;
+    }
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,170,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,170,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    h1 {
+      color: #e0e8f0;
+      font-size: 28px;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+    .sub {
+      color: #6a7a8a;
+      font-size: 13px;
+      letter-spacing: 2px;
+      margin-bottom: 48px;
+    }
+    .cards {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .card {
+      width: 280px;
+      height: 340px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+    }
+
+    /* Cyber card */
+    .card-cyber {
+      background: #11131a;
+      border: 1px solid rgba(0,170,255,0.3);
+      box-shadow: 0 0 20px rgba(0,170,255,0.08), inset 0 0 60px rgba(0,170,255,0.02);
+    }
+    .card-cyber:hover {
+      box-shadow: 0 0 40px rgba(0,170,255,0.25), 0 0 80px rgba(0,170,255,0.08), inset 0 0 60px rgba(0,170,255,0.04);
+      border-color: rgba(0,170,255,0.6);
+    }
+    .card-cyber .icon { font-size: 48px; margin-bottom: 20px; }
+    .card-cyber .name {
+      color: #00aaff;
+      font-size: 22px;
+      letter-spacing: 3px;
+    }
+    .card-cyber .desc {
+      color: #4a6a8a;
+      font-size: 11px;
+      letter-spacing: 2px;
+      margin-top: 10px;
+    }
+
+    /* Vista card */
+    .card-vista {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(74,144,217,0.3);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .card-vista::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .card-vista:hover::before { opacity: 1; }
+    .card-vista:hover {
+      box-shadow: 0 12px 48px rgba(74,144,217,0.25);
+      border-color: rgba(74,144,217,0.6);
+    }
+    .card-vista .icon { font-size: 48px; margin-bottom: 20px; filter: drop-shadow(0 2px 8px rgba(74,144,217,0.3)); }
+    .card-vista .name {
+      color: #e0e8f0;
+      font-size: 22px;
+      letter-spacing: 2px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .card-vista .desc {
+      color: #8ab4e8;
+      font-size: 11px;
+      letter-spacing: 1px;
+      margin-top: 10px;
+    }
+    .card-vista .orb {
+      position: absolute;
+      bottom: 20px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #5af, #28a);
+      box-shadow: 0 0 12px rgba(74,144,217,0.5);
+    }
+
+    .skip {
+      display: block;
+      margin-top: 32px;
+      color: #3a4a5a;
+      font-size: 12px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+      letter-spacing: 1px;
+      transition: color 0.2s;
+    }
+    .skip:hover { color: #5a7a9a; }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="container">
+    <h1>SELECT PORTFOLIO THEME</h1>
+    <p class="sub">Choose your preferred experience</p>
+    <div class="cards">
+      <a class="card card-cyber" href="cyber/" data-theme="cyber">
+        <div class="icon">&#x26A1;</div>
+        <div class="name">CYBER EDITION</div>
+        <div class="desc">v2.0 // NEURAL INTERFACE</div>
+      </a>
+      <a class="card card-vista" href="vista/" data-theme="vista">
+        <div class="icon">&#x1F310;</div>
+        <div class="name">VISTA EDITION</div>
+        <div class="desc">Windows Vista&trade; Experience</div>
+        <div class="orb"></div>
+      </a>
+    </div>
+    <button class="skip" onclick="document.querySelector('.card-cyber').click()">Skip to Cyber &rarr;</button>
+  </div>
+  <script>
+    (function() {
+      const saved = localStorage.getItem('portfolioTheme');
+      if (saved === 'cyber') { window.location.replace('cyber/'); return; }
+      if (saved === 'vista') { window.location.replace('vista/'); return; }
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', function(e) {
+          e.preventDefault();
+          const theme = this.dataset.theme;
+          localStorage.setItem('portfolioTheme', theme);
+          window.location.href = this.getAttribute('href');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
